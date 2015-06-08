@@ -69,6 +69,7 @@ public final class LocalInfo {
      */
     public static final String USER_NAME = "Local.UserName";
     public static final String TRANSACTION_ID = "Local.TransactionId";
+    public static String BASE_URL = "Local.BaseUrl";
     public static final String SESSION_CONTEXT = "Local.SessionContext";
 
     /**
@@ -119,6 +120,16 @@ public final class LocalInfo {
         set(USER_NAME, userName, true, true);
     }
 
+    /** Returns base URL of Web application. */
+    public static String getBaseUrl() {
+        return get(BASE_URL, String.class, true);
+    }
+
+    /** Sets base URL for Web application. */
+    public static void setBaseUrl(String url) {
+        set(BASE_URL, url, true, true);
+    }
+    
     public static String getTransactionId() {
         return get(TRANSACTION_ID, String.class);
     }

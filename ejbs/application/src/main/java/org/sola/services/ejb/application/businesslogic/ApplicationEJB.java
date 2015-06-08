@@ -62,7 +62,7 @@ import org.sola.services.ejbs.admin.businesslogic.AdminEJBLocal;
  * application schema.
  */
 @Stateless
-@EJB(name = "java:app/SOLA_SL/ApplicationEJBLocal", beanInterface = ApplicationEJBLocal.class)
+@EJB(name = "java:app/ApplicationEJBLocal", beanInterface = ApplicationEJBLocal.class)
 public class ApplicationEJB extends AbstractEJB implements ApplicationEJBLocal {
 
     @EJB

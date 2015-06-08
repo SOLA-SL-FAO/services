@@ -36,7 +36,6 @@ import org.sola.common.RolesConstants;
 import org.sola.common.SOLAException;
 import org.sola.common.StringUtility;
 import org.sola.common.messaging.ServiceMessage;
-import org.sola.services.common.LocalInfo;
 import org.sola.services.common.ejbs.AbstractEJB;
 import org.sola.services.common.repository.CommonSqlProvider;
 import org.sola.services.common.repository.entities.AbstractReadOnlyEntity;
@@ -67,7 +66,7 @@ import org.sola.services.ejb.search.spatial.ResultForSelectionInfo;
  * treated as read only. It must not be used to persist data changes.</p>
  */
 @Stateless
-@EJB(name = "java:app/SOLA_SL/SearchEJBLocal", beanInterface = SearchEJBLocal.class)
+@EJB(name = "java:app/SearchEJBLocal", beanInterface = SearchEJBLocal.class)
 public class SearchEJB extends AbstractEJB implements SearchEJBLocal {
 
     /**

@@ -40,6 +40,7 @@ import javax.interceptor.InvocationContext;
 import org.sola.common.RolesConstants;
 import org.sola.common.SOLAException;
 import org.sola.common.messaging.ServiceMessage;
+import org.sola.services.common.EntityAction;
 import org.sola.services.common.LocalInfo;
 import org.sola.services.common.repository.entities.AbstractCodeEntity;
 import org.sola.services.common.repository.CommonRepository;
@@ -91,6 +92,9 @@ import org.sola.services.common.repository.entities.AbstractEntity;
     RolesConstants.ADMIN_CHANGE_PASSWORD,
     RolesConstants.CS_ACCESS_CS,
     RolesConstants.ADMINISTRATIVE_ASSIGN_TEAM,
+    RolesConstants.CS_MODERATE_CLAIM,
+    RolesConstants.CS_RECORD_CLAIM,
+    RolesConstants.CS_REVIEW_CLAIM,
     RolesConstants.CLASSIFICATION_CHANGE_CLASS,
     RolesConstants.CLASSIFICATION_UNRESTRICTED,
     RolesConstants.CLASSIFICATION_RESTRICTED,
@@ -118,6 +122,17 @@ public abstract class AbstractEJB implements AbstractEJBLocal {
         return entityPackage;
     }
 
+    /** Returns entity list size excluding deleted or disassociated */
+    public <T extends AbstractEntity> int getEntityListSize(List<T> entityList) {
+        int cnt = 0;
+        for (AbstractEntity entity : entityList) {
+            if (entity.getEntityAction() == null || (!entity.getEntityAction().equals(EntityAction.DELETE) && !entity.getEntityAction().equals(EntityAction.DISASSOCIATE))) {
+                cnt += 1;
+            }
+        }
+        return cnt;
+    }
+    
     /**
      * Sets name of the entities package.
      */
@@ -154,7 +169,7 @@ public abstract class AbstractEJB implements AbstractEJBLocal {
      *
      * @return The user name.
      */
-    protected String getUserName() {
+    public String getUserName() {
         return sessionContext.getCallerPrincipal().getName();
     }
 
@@ -269,9 +284,9 @@ public abstract class AbstractEJB implements AbstractEJBLocal {
      */
     @Override
     public <T extends AbstractCodeEntity> T getCodeEntity(Class<T> codeEntityClass, String code, String lang) {
-        if (!codeEntityClass.getPackage().getName().equals(getEntityPackage())) {
-            throw new SOLAException(ServiceMessage.EXCEPTION_ENTITY_PACKAGE_VIOLATION);
-        }
+//        if (!codeEntityClass.getPackage().getName().equals(getEntityPackage())) {
+//            throw new SOLAException(ServiceMessage.EXCEPTION_ENTITY_PACKAGE_VIOLATION);
+//        }
         return getRepository().getCode(codeEntityClass, code, lang);
     }
 
@@ -283,9 +298,9 @@ public abstract class AbstractEJB implements AbstractEJBLocal {
      */
     @Override
     public <T extends AbstractCodeEntity> List<T> getCodeEntityList(Class<T> codeEntityClass, String lang) {
-        if (!codeEntityClass.getPackage().getName().equals(getEntityPackage())) {
-            throw new SOLAException(ServiceMessage.EXCEPTION_ENTITY_PACKAGE_VIOLATION);
-        }
+//        if (!codeEntityClass.getPackage().getName().equals(getEntityPackage())) {
+//            throw new SOLAException(ServiceMessage.EXCEPTION_ENTITY_PACKAGE_VIOLATION);
+//        }
         return getRepository().getCodeList(codeEntityClass, lang);
     }
 

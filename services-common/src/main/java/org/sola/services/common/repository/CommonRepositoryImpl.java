@@ -90,6 +90,7 @@ public class CommonRepositoryImpl implements CommonRepository {
      * Returns the {@linkplain DatabaseConnectionManager} used for this instance
      * of the repository.
      */
+    @Override
     public DatabaseConnectionManager getDbConnectionManager() {
         return dbConnectionManager;
     }
@@ -1162,6 +1163,14 @@ public class CommonRepositoryImpl implements CommonRepository {
         return entity;
     }
 
+    /**
+     * Generic method to return list of {@link AbstractCodeEntity}
+     *
+     * @param <T> Code entity class type
+     * @param languageCode Language (locale) code, used to localize final
+     * result. If null is provided, full unlocalized string will be returned.
+     * @return
+     */
     @Override
     public <T extends AbstractCodeEntity> List<T> getCodeList(Class<T> codeListClass,
             String languageCode) {

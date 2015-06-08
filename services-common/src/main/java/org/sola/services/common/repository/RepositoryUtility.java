@@ -1,28 +1,30 @@
 /**
  * ******************************************************************************************
- * Copyright (C) 2015 - Food and Agriculture Organization of the United Nations (FAO).
- * All rights reserved.
+ * Copyright (C) 2015 - Food and Agriculture Organization of the United Nations
+ * (FAO). All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  *
- *    1. Redistributions of source code must retain the above copyright notice,this list
- *       of conditions and the following disclaimer.
- *    2. Redistributions in binary form must reproduce the above copyright notice,this list
- *       of conditions and the following disclaimer in the documentation and/or other
- *       materials provided with the distribution.
- *    3. Neither the name of FAO nor the names of its contributors may be used to endorse or
- *       promote products derived from this software without specific prior written permission.
+ * 1. Redistributions of source code must retain the above copyright notice,this
+ * list of conditions and the following disclaimer. 2. Redistributions in binary
+ * form must reproduce the above copyright notice,this list of conditions and
+ * the following disclaimer in the documentation and/or other materials provided
+ * with the distribution. 3. Neither the name of FAO nor the names of its
+ * contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,PROCUREMENT
- * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,STRICT LIABILITY,OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT,STRICT LIABILITY,OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  * *********************************************************************************************
  */
 package org.sola.services.common.repository;
@@ -58,6 +60,7 @@ import org.sola.services.common.repository.entities.AbstractEntityInfo;
 import org.sola.services.common.repository.entities.AbstractReadOnlyEntity;
 import org.sola.services.common.repository.entities.ChildEntityInfo;
 import org.sola.services.common.repository.entities.ColumnInfo;
+import org.sola.services.ejb.cache.businesslogic.CacheEJBLocal;
 
 /**
  * Repository Utility class providing a number of utility methods for dealing
@@ -76,6 +79,7 @@ public class RepositoryUtility {
     private static Map<String, Boolean> entityCacheable = new HashMap<String, Boolean>();
     private static Map<String, String> sorterExpressions = new HashMap<String, String>();
     private static Map<String, List<ChildEntityInfo>> childEntities = new HashMap<String, List<ChildEntityInfo>>();
+    private static Boolean isCacheEJBDeployed = null;
 
     /**
      * Uses recursion to obtain the list of all declared fields of a class
@@ -110,7 +114,8 @@ public class RepositoryUtility {
 
     /**
      * Indicates if an entity can be cached for fast access. Used for reference
-     * codes that are not frequently updated.
+     * codes that are not frequently updated. Will return false if the CacheEJB
+     * has not been deployed.
      *
      * @param <T>
      * @param entityClass The entity class to check for the cacheable annotation
@@ -118,23 +123,31 @@ public class RepositoryUtility {
      */
     public static <T extends AbstractReadOnlyEntity> boolean isCachable(Class<T> entityClass) {
         boolean result = false;
-        if (entityCacheable.containsKey(entityClass.getName())) {
-            result = entityCacheable.get(entityClass.getName());
-        } else {
-            Cacheable cacheableAnnotation = entityClass.getAnnotation(Cacheable.class);
-            if (cacheableAnnotation == null && entityClass.getSuperclass() != null
-                    && AbstractReadOnlyEntity.class.isAssignableFrom(entityClass.getSuperclass())) {
-                result = isCachable((Class<AbstractReadOnlyEntity>) entityClass.getSuperclass());
-            }
-            if (cacheableAnnotation != null) {
-                result = cacheableAnnotation.value();
-                // Set the cacheable state of the entity based on the value of the
-                // Cacheable annotation
-                entityCacheable.put(entityClass.getName(), result);
+
+        if (isCacheEJBDeployed == null) {
+            // Check if the CacheEJB has been deployed or not
+            isCacheEJBDeployed = RepositoryUtility.tryGetEJB("CacheEJBLocal") != null;
+            LogUtility.log("isCacheEJBDeployed = " + isCacheEJBDeployed);
+        }
+        if (isCacheEJBDeployed) {
+            if (entityCacheable.containsKey(entityClass.getName())) {
+                result = entityCacheable.get(entityClass.getName());
             } else {
-                // Set the cacheable state for this entity. Note that the result 
-                // may hve been inherited from a super class. 
-                entityCacheable.put(entityClass.getName(), result);
+                Cacheable cacheableAnnotation = entityClass.getAnnotation(Cacheable.class);
+                if (cacheableAnnotation == null && entityClass.getSuperclass() != null
+                        && AbstractReadOnlyEntity.class.isAssignableFrom(entityClass.getSuperclass())) {
+                    result = isCachable((Class<AbstractReadOnlyEntity>) entityClass.getSuperclass());
+                }
+                if (cacheableAnnotation != null) {
+                    result = cacheableAnnotation.value();
+                    // Set the cacheable state of the entity based on the value of the
+                    // Cacheable annotation
+                    entityCacheable.put(entityClass.getName(), result);
+                } else {
+                    // Set the cacheable state for this entity. Note that the result 
+                    // may hve been inherited from a super class. 
+                    entityCacheable.put(entityClass.getName(), result);
+                }
             }
         }
         return result;
@@ -346,7 +359,7 @@ public class RepositoryUtility {
     public static <T> T getEJB(Class<T> ejbLocalClass) {
         T ejb = null;
 
-        String ejbLookupName = "java:app/SOLA_SL/" + ejbLocalClass.getSimpleName();
+        String ejbLookupName = "java:app/" + ejbLocalClass.getSimpleName();
         try {
             InitialContext ic = new InitialContext();
             ejb = (T) ic.lookup(ejbLookupName);
@@ -361,7 +374,20 @@ public class RepositoryUtility {
     public static <T> T tryGetEJB(Class<T> ejbLocalClass) {
         T ejb = null;
 
-        String ejbLookupName = "java:app/SOLA_SL/" + ejbLocalClass.getSimpleName();
+        String ejbLookupName = "java:app/" + ejbLocalClass.getSimpleName();
+        try {
+            InitialContext ic = new InitialContext();
+            ejb = (T) ic.lookup(ejbLookupName);
+        } catch (NamingException ex) {
+            // Ignore the naming exception and return null; 
+        }
+        return ejb;
+    }
+
+    public static <T> T tryGetEJB(String ejbLocalClass) {
+        T ejb = null;
+
+        String ejbLookupName = "java:app/" + ejbLocalClass;
         try {
             InitialContext ic = new InitialContext();
             ejb = (T) ic.lookup(ejbLookupName);

@@ -41,7 +41,6 @@ import org.sola.services.common.br.ValidationResult;
 import org.sola.services.common.ejbs.AbstractEJB;
 import org.sola.services.common.faults.SOLAValidationException;
 import org.sola.services.common.repository.CommonSqlProvider;
-import org.sola.services.common.repository.entities.AbstractStatusChangerEntity;
 import org.sola.services.ejb.cadastre.repository.entities.*;
 import org.sola.services.ejb.system.businesslogic.SystemEJBLocal;
 import org.sola.services.ejb.system.repository.entities.BrValidation;
@@ -52,7 +51,7 @@ import org.sola.services.ejb.system.repository.entities.BrValidation;
  * the administrative schema.
  */
 @Stateless
-@EJB(name = "java:app/SOLA_SL/CadastreEJBLocal", beanInterface = CadastreEJBLocal.class)
+@EJB(name = "java:app/CadastreEJBLocal", beanInterface = CadastreEJBLocal.class)
 public class CadastreEJB extends AbstractEJB implements CadastreEJBLocal {
 
     @EJB

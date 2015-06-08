@@ -38,7 +38,6 @@ import javax.ejb.Stateless;
 import org.sola.common.RolesConstants;
 import org.sola.common.SOLAException;
 import org.sola.common.messaging.ServiceMessage;
-import org.sola.services.common.EntityAction;
 import org.sola.services.common.br.ValidationResult;
 import org.sola.services.common.ejbs.AbstractEJB;
 import org.sola.services.common.faults.SOLAValidationException;
@@ -57,7 +56,7 @@ import org.sola.services.ejb.transaction.repository.entities.TransactionType;
  * source details.
  */
 @Stateless
-@EJB(name = "java:app/SOLA_SL/SourceEJBLocal", beanInterface = SourceEJBLocal.class)
+@EJB(name = "java:app/SourceEJBLocal", beanInterface = SourceEJBLocal.class)
 public class SourceEJB extends AbstractEJB implements SourceEJBLocal {
 
     @EJB
